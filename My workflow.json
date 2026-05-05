@@ -1,0 +1,233 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "InstaPostChat",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e1643b55-017e-4852-8a73-9c2d3d011063",
+      "name": "Webhook",
+      "webhookId": "ed2bcd24-1f53-4050-8807-fcb9efaf3934"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        272,
+        -208
+      ],
+      "id": "0b2ad1c1-b997-41d5-a937-642a812abaa1",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "124a37d5-ff53-488e-80bf-6b79b83eaf8c",
+              "name": "chat_id",
+              "value": "={{ $json.body.entry[0].messaging[0].sender.id }}",
+              "type": "string"
+            },
+            {
+              "id": "80434858-fc7f-4a90-86cb-3d564386c11a",
+              "name": "chatInput",
+              "value": "={{ $json.body.entry[0].messaging[0].message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "ca93635d-47bb-473c-8a2c-28620f398d61",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Você é o assistente de IA para a startup PostChatCE.\n\n**Propósito Principal:**\nSua função é engajar, fornecer informações e capturar a intenção principal das mensagens de Direct do Instagram. Você deve ser a primeira linha de suporte e vendas.\n\n**Personalidade e Tom:**\n1.  **Tom:** Sempre profissional, otimista, entusiasta e amigável. Use emojis leves e apropriados (ex: ✨, 🚀, 🤝).\n2.  **Linguagem:** Use português de Portugal ou Brasil (dependendo do seu público). Mantenha as frases curtas e diretas.\n3.  **Meta:** Concluir a interação respondendo à pergunta e, se aplicável, direcionando o usuário para o próximo passo (ex: \"Podemos começar o seu teste gratuito?\").\n\n**Instruções Específicas:**\n1.  **Reconhecimento do Usuário:** Use a seguinte frase para se apresentar e se desculpar por não ter o nome do usuário: \"Olá! Seja bem-vindo(a) à PostChatCE! Desculpe, ainda não tenho seu nome, mas com o que posso te ajudar hoje? 🚀\"\n2.  **Informações da Empresa:**\n    * **O que fazemos:** [Descreva em 1 frase: Ex: \"Ajudamos pequenas empresas a gerar legendas de Instagram com IA.\"]\n    * **Produto:** [Nome do produto, Ex: \"MagicCaptions\"]\n    * **Custo/Teste:** [Ex: \"Oferecemos 7 dias de teste gratuito, sem a necessidade de cartão.\"]\n3.  **Regra de Limite:** Suas respostas devem ter no máximo **duas frases longas** ou **três frases curtas**, seguidas de uma pergunta de engajamento (Call-to-Action).\n4.  **Resposta a perguntas complexas:** Se a pergunta for muito técnica (ex: sobre API keys ou billing), você deve encerrar a resposta dizendo: \"Essa é uma excelente pergunta! Para garantir a melhor resposta, vou encaminhar você para um especialista da nossa equipe. Em que email ou WhatsApp podemos te contatar? 🤝\"\n\n**Sua resposta deve ser direta e seguir a estrutura: Saudação (1) + Resposta (2) + Call-to-Action (3).**"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "e25ca829-1561-4a3f-bfa2-057a6d860469",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.chat_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        240
+      ],
+      "id": "3a0b1577-fed5-4e03-aa8e-78b0371c1993",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        336,
+        240
+      ],
+      "id": "2c6e402a-45d6-41d8-bb36-19bc9e4ce52e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9HpSYrIiwYsnCjqM",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.instagram.com/v23.0/me/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer IGAAVxVAzmBjlBZAFRMbEZA0TFcxT2NOVUdac2l1enlGTkNmcEJ1ZAy1SUi1QNXN6RGhxNlYzeUxCZAnlQWVM0YWtFSXh1YXFnQzloWEhoeFhUYm45a1ZApXzR2NDEwT0VIYzJ2MXVtZATg4SXJLMzRudDYzSE1UTVFMcmRhZAlJZAMnQwcwZDZD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_type\": \"RESPONSE\",\n  \"recipient\": {\n    \"id\": \"{{ $node[\"Edit Fields\"].json.chat_id }}\" \n  },\n  \"message\": {\n    \"text\": \"{{ $node[\"LimpaTexto\"].json.clean_text }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "d41cf02c-eb4a-4da8-9c80-fe95a4991349",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const responseText = $input.item.json.output;\n\n// 1. Remove quebras de linha\nlet cleanText = responseText.replace(/(\\r\\n|\\n|\\r)/gm, \" \");\n\n// 2. Remove as aspas duplas, substituindo por aspas simples ou as escapando para garantir segurança no JSON\ncleanText = cleanText.replace(/\"/g, '\\\"');\n\n// Cria o novo objeto de saída\nreturn [{\n    json: {\n        clean_text: cleanText\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        0
+      ],
+      "id": "16303e02-e2da-47f9-a03e-f134834cdc16",
+      "name": "LimpaTexto"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "LimpaTexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LimpaTexto": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6fc49c70-f058-43a8-9ada-30a4c78fe85a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9be8b07d213cdefcc36c529dc0bfda6bf6d9e213b2f3d8dd97df3ff546ac4476"
+  },
+  "id": "GCaAQCCxVQ4V3q6E",
+  "tags": []
+}
